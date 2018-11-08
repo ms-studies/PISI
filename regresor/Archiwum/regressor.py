@@ -5,82 +5,54 @@ import random
 #import matplotlib.pyplot as plt
 
 def main():
-    #Load train data
-    data = import_trainset()
-    level = findModelLevel(data)
+    #Load data
+    trainSet = import_trainset()
+    #Preprocessing
+    inputs, expected = splitTrainSet(trainSet)
+    level = 2 #TODO: Find level
 
-    inputs, expected = splitTrainSet(data)
-
-    inputs, mins, maxs = normalize_input(inputs)
-    inputs = [expand_input(trainCase, level) for trainCase in inputs]
+    expandedInputs = [expand_input(trainCase, level) for trainCase in inputs]
+    expandedInputs, mins, maxs = normalize_input(expandedInputs)
 
     model = Model()
-    errors = model.train(inputs=inputs, expected=expected, iterations=1000000, alpha = 0.1, desiredError = 0.001, momentum=0.9)
+    errors = model.train(inputs=expandedInputs, expected=expected, iterations=1000000, alpha = 0.1, desiredError = 0.001, momentum=0.7)
+    #plt.figure(1)
+    #plt.plot(errors)
+    # plt.show()
 
-    #====TEST====
+    #SHOW PREDICTION
+    # trainSet = import_trainset()
+    # inputs, expected = splitTrainSet(trainSet)
+    # expandedInputs = [expand_input(trainCase, level) for trainCase in inputs]
+    # x = []
+    # y = []
+    # for trainCase in expandedInputs:
+    #     x.append(trainCase[0])
+    #     y.append(model.predict(trainCase, False, mins, maxs))
+    
+    # plt.figure(2)
+    # plt.plot(x, y)
+    # plt.plot(inputs, expected)
+    # plt.show()
+
     testSet = import_testset()
-    testSet = normalize_with_minmax(testSet, mins, maxs)
-    testSet = [expand_input(testCase, level) for testCase in testSet]
     for case in testSet:
-        prediction = model.predict(case)
+        expanded = expand_input(case, 2)
+        prediction = model.predict(expanded, False, mins, maxs)
         print(prediction)
 
-def findModelLevel(data):
-    MSEMatrix = []
-    for i in range(5):
-        trainSet, validationSet = splitData(data, 0.25)
-
-        trainInput, trainExpected = splitTrainSet(trainSet)
-        validationInput, validationExpected = splitTrainSet(validationSet)
-
-        trainInput, mins, maxs = normalize_input(trainInput)
-        validationInput = normalize_with_minmax(validationInput, mins, maxs)
-
-        MSEs = []
-        for level in range(20):
-            trainInputExpanded = [expand_input(trainCase, level+1) for trainCase in trainInput]
-            model = Model()
-            model.train(inputs=trainInputExpanded, expected=trainExpected, iterations=10000, alpha = 0.1, desiredError = 0.1, momentum=0.9)
-        
-            validationInputExpanded = [expand_input(valCase, level+1) for valCase in validationInput]
-            error = model.test(validationInputExpanded, validationExpected)
-            MSEs.append(error)
-
-        MSEMatrix.append(MSEs)
-    
-    avgMSEs = []
-    for idx, v in enumerate(MSEMatrix[0]):
-        col = column(MSEMatrix, idx)
-        avgMSEs.append(sum(col)/len(col))
-    idx = avgMSEs.index(min(avgMSEs))
-    return idx+1
-
-def splitData(data, percentage):
-    random.shuffle(data)
-    itemsToTake = int(percentage * len(data))
-    validation = []
-    train = []
-    for idx, row in enumerate(data):
-        if idx < itemsToTake:
-            validation.append(row)
-        else:
-            train.append(row)
-    return train, validation
-
-def normalize_with_minmax(input, mins, maxs):
+def normalize_input(input):
     arr = []
+    columns = [column(input, i) for i, f in enumerate(input[0])]
+    mins = [min(col) for col in columns]
+    maxs = [max(col) for col in columns]
+    avgs = [sum(col)/len(col) for col in columns]
+
     for line in input:
         linearr = []
         for idx, elem in enumerate(line):
             linearr.append((elem - mins[idx])/(maxs[idx] - mins[idx]))
         arr.append(linearr)
-    return arr
-
-def normalize_input(input):
-    columns = [column(input, i) for i, f in enumerate(input[0])]
-    mins = [min(col) for col in columns]
-    maxs = [max(col) for col in columns]
-    arr = normalize_with_minmax(input, mins, maxs)
     return arr, mins, maxs
 
 def splitTrainSet(trainSet):
@@ -106,24 +78,12 @@ def expand_input(input, level):
 
 class Model:
     p = []
-
-    def __init__(self):
-        self.p = []
-
-    def test(self, inputs, expected):
-        error = 0
-        for idx, inputCase in enumerate(inputs):
-            prediction = self.predict(inputCase)
-            exptectation = expected[idx]
-            error += pow(prediction - exptectation, 2)
-        mse = error / len(inputs)
-        return mse
     
-    def predict(self, input):
+    def predict(self, input, isNormalized, mins, maxs):
         sum = self.p[0]
         for idx, val in enumerate(input):
-            #value = val if isNormalized else (val - mins[idx])/(maxs[idx]-mins[idx])
-            sum += self.p[idx+1] * val
+            value = val if isNormalized else (val - mins[idx])/(maxs[idx]-mins[idx])
+            sum += self.p[idx+1] * value
         return sum
 
     def train(self, inputs, expected, iterations, alpha, desiredError, momentum):
@@ -138,7 +98,7 @@ class Model:
             #Calculate differences
             differences = []
             for idx, inputCase in enumerate(inputs):
-                prediction = self.predict(inputCase)
+                prediction = self.predict(inputCase, True, [], [])
                 exptectation = expected[idx]
                 difference = prediction - exptectation
                 differences.append(difference)
