@@ -15,7 +15,7 @@ def main():
     inputs = [expand_input(trainCase, level) for trainCase in inputs]
 
     model = Model()
-    errors = model.train(inputs=inputs, expected=expected, iterations=1000000, alpha = 0.1, desiredError = 0.001, momentum=0.9)
+    errors = model.train(inputs=inputs, expected=expected, iterations=10000000, alpha = 0.1, desiredError = 0.0001, momentum=0.9)
 
     #====TEST====
     testSet = import_testset()
@@ -27,7 +27,7 @@ def main():
 
 def findModelLevel(data):
     MSEMatrix = []
-    for i in range(5):
+    for i in range(1):
         trainSet, validationSet = splitData(data, 0.25)
 
         trainInput, trainExpected = splitTrainSet(trainSet)
@@ -37,14 +37,16 @@ def findModelLevel(data):
         validationInput = normalize_with_minmax(validationInput, mins, maxs)
 
         MSEs = []
-        for level in range(20):
+        for level in range(10):
             trainInputExpanded = [expand_input(trainCase, level+1) for trainCase in trainInput]
             model = Model()
-            model.train(inputs=trainInputExpanded, expected=trainExpected, iterations=10000, alpha = 0.1, desiredError = 0.1, momentum=0.9)
+            model.train(inputs=trainInputExpanded, expected=trainExpected, iterations=5000, alpha = 0.1, desiredError = 0.01, momentum=0.9)
         
             validationInputExpanded = [expand_input(valCase, level+1) for valCase in validationInput]
             error = model.test(validationInputExpanded, validationExpected)
             MSEs.append(error)
+            if len(MSEs) > 2 and MSEs[level] > MSEs[level-1] and MSEs[level-1] > MSEs[level-2]:
+                break
 
         MSEMatrix.append(MSEs)
     
