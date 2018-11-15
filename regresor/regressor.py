@@ -15,7 +15,7 @@ def main():
     inputs = [expand_input(trainCase, level) for trainCase in inputs]
 
     model = Model()
-    errors = model.train(inputs=inputs, expected=expected, iterations=10000000, alpha = 0.1, desiredError = 0.0001, momentum=0.9)
+    errors = model.train(inputs=inputs, expected=expected, iterations=2000000, alpha = 0.3, desiredError = 0.0001, momentum=0.9)
 
     #====TEST====
     testSet = import_testset()
@@ -37,10 +37,10 @@ def findModelLevel(data):
         validationInput = normalize_with_minmax(validationInput, mins, maxs)
 
         MSEs = []
-        for level in range(10):
+        for level in range(7):
             trainInputExpanded = [expand_input(trainCase, level+1) for trainCase in trainInput]
             model = Model()
-            model.train(inputs=trainInputExpanded, expected=trainExpected, iterations=5000, alpha = 0.1, desiredError = 0.01, momentum=0.9)
+            model.train(inputs=trainInputExpanded, expected=trainExpected, iterations=1000, alpha = 0.3, desiredError = 0.01, momentum=0.9)
         
             validationInputExpanded = [expand_input(valCase, level+1) for valCase in validationInput]
             error = model.test(validationInputExpanded, validationExpected)
@@ -95,15 +95,13 @@ def splitTrainSet(trainSet):
 
 def expand_input(input, level):
     expanded = []
-    for i in range(level-1):
-        for val in input:
-            expanded.append(val**(i+1))
-    combinations = list(combinations_with_replacement(input, level))
-    for combination in combinations:
-        combinationValue = 1
-        for combinationElement in combination:
-            combinationValue *= combinationElement
-        expanded.append(combinationValue)
+    for i in range(level):
+        combinations = list(combinations_with_replacement(input, i+1))
+        for combination in combinations:
+            combinationValue = 1
+            for combinationElement in combination:
+                combinationValue *= combinationElement
+            expanded.append(combinationValue)
     return expanded
 
 class Model:
