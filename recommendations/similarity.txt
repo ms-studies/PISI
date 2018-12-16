@@ -1,0 +1,3 @@
+genres_count = count of matching genres
+language = 1 if language matches else 0
+similarity = 3 * genres_count + language
