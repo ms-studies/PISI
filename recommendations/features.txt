@@ -1,2 +1,4 @@
 genres
+keywords
 original_language
+vote_average

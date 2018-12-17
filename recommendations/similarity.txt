@@ -1,3 +1,6 @@
 genres_count = count of matching genres
+keywords_count = count of matching keywords
 language = 1 if language matches else 0
-similarity = 3 * genres_count + language
+voteDifference = (difference in vote_average)^2
+
+similarity = 2 * genres_count + 3 * keywords_count + language - 2 * voteDifference
