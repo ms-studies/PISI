@@ -2,8 +2,6 @@ from file_utils import import_trainset, import_testset
 from itertools import combinations_with_replacement
 import random
 
-#import matplotlib.pyplot as plt
-
 def main():
     #Load train data
     data = import_trainset()
@@ -15,7 +13,7 @@ def main():
     inputs = [expand_input(trainCase, level) for trainCase in inputs]
 
     model = Model()
-    errors = model.train(inputs=inputs, expected=expected, iterations=2000000, alpha = 0.3, desiredError = 0.0001, momentum=0.9)
+    errors = model.train(inputs=inputs, expected=expected, iterations=1000000, alpha = 0.3, desiredError = 0.001, momentum=0.95)
 
     #====TEST====
     testSet = import_testset()
@@ -27,7 +25,7 @@ def main():
 
 def findModelLevel(data):
     MSEMatrix = []
-    for i in range(1):
+    for i in range(3):
         trainSet, validationSet = splitData(data, 0.25)
 
         trainInput, trainExpected = splitTrainSet(trainSet)
@@ -37,16 +35,16 @@ def findModelLevel(data):
         validationInput = normalize_with_minmax(validationInput, mins, maxs)
 
         MSEs = []
-        for level in range(7):
+        for level in range(9):
             trainInputExpanded = [expand_input(trainCase, level+1) for trainCase in trainInput]
             model = Model()
-            model.train(inputs=trainInputExpanded, expected=trainExpected, iterations=1000, alpha = 0.3, desiredError = 0.01, momentum=0.9)
+            model.train(inputs=trainInputExpanded, expected=trainExpected, iterations=100000, alpha = 0.3, desiredError = 0.001, momentum=0.95)
         
             validationInputExpanded = [expand_input(valCase, level+1) for valCase in validationInput]
             error = model.test(validationInputExpanded, validationExpected)
             MSEs.append(error)
-            if len(MSEs) > 2 and MSEs[level] > MSEs[level-1] and MSEs[level-1] > MSEs[level-2]:
-                break
+            # if len(MSEs) > 2 and MSEs[level] > MSEs[level-1] and MSEs[level-1] > MSEs[level-2]:
+                # break
 
         MSEMatrix.append(MSEs)
     
