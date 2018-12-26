@@ -1,6 +1,5 @@
-genres_count = count of matching genres
-keywords_count = count of matching keywords
-language = 1 if language matches else 0
-voteDifference = (difference in vote_average)^2
-
-similarity = 2 * genres_count + 3 * keywords_count + language - 2 * voteDifference
+c - how many movies have been rated by two people
+d - the difference between the reviews
+avgD - average of aboslute values of differences - sum(abs(d))/c
+s = c^2/(sum(d^2)+1)
+similarity = avgD > 1.5 ? 0 : s

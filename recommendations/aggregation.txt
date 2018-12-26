@@ -1,0 +1,1 @@
+Obliczana jest srednia wazona, gdzie wagi stanowią similarties opisane w similarity.txt, a następnie wynik jest zaokrąglany.
